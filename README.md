@@ -38,6 +38,11 @@ python main.py --eval=False
 python main.py --eval=True
 ```
 
+### Our result
+
+![](https://raw.githubusercontent.com/AegeanYan/ImageBed/main/%E6%88%AA%E5%B1%8F2023-02-07%20%E4%B8%8B%E5%8D%8811.58.48.png)
+
+
 #### Citation
 
 T.B.C
