@@ -119,9 +119,6 @@ def main(args):
 	dataset_train = dataset('train')
 	dataset_eval  = dataset('eval')
 
-	print(f'train size {len(dataset_train)}')
-	print(f'eval size {len(dataset_eval)}')
-
 	sampler_train = torch.utils.data.RandomSampler(dataset_train)
 	batch_sampler_train = torch.utils.data.BatchSampler(sampler_train, args.batch_size, drop_last=True)
 	sampler_eval = torch.utils.data.SequentialSampler(dataset_eval)

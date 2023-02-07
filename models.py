@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import clip
+import torchvision.models as tvmodels
 
 class clip_a2v(nn.Module):
     def __init__(self, args):
@@ -15,6 +16,7 @@ class clip_a2v(nn.Module):
 
         self.num_fc= 512
         self.num_clip = 512
+        self.num_bert = 1536
 
         self.dropout_rate = 0.5
 
@@ -38,7 +40,11 @@ class clip_a2v(nn.Module):
 
         # Load the model
         self.device = args.device
-        self.model, self.preprocess = clip.load('ViT-B/32', self.device)
+        # self.model, self.preprocess = clip.load('ViT-B/32', self.device)
+        # self.pasta_language_matrix  = torch.from_numpy(np.load("util/pasta_language_matrix.npy")).cuda()
+        self.model = tvmodels.resnet50(pretrained=True)
+        self.model.fc = nn.Linear(2048, self.num_clip)
+        torch.nn.init.eye(self.model.fc.weight)
 
         # CLIP feature to PaSta feature.
         self.clip2pasta = nn.ModuleList(
@@ -171,16 +177,17 @@ class clip_a2v(nn.Module):
         p_parts = []
 
         with torch.no_grad():
-            image_features = self.model.encode_image(image).float().to(self.device)
+            # image_features = self.model.encode_image(image).float().to(self.device)
+            image_features = self.model(image).float().to(self.device)
         f_parts.append(image_features)
 
         for class_id, classes in enumerate(self.pasta_names):
             '''
             # Image and Text Feature
-            text_inputs = [clip.tokenize(f"there is no {classes} in the image")]
+            text_inputs = []
             for characteristics in self.characteristics[classes]:
                 text_inputs.append(clip.tokenize(f"the person's {classes} is {characteristics}"))
-            text_inputs = torch.cat(text_inputs,dim=0).to(device)
+            text_inputs = torch.cat(text_inputs,dim=0).to(self.device)
 
             with torch.no_grad():
                 text_features_i = self.model.encode_text(text_inputs).float()
@@ -191,21 +198,14 @@ class clip_a2v(nn.Module):
             text_features_i = text_features_i / text_features_i.norm(dim=-1, keepdim=True)
             similarity = (100.0 * image_features_i @ text_features_i.T)
 
-            now_num_pasta = (len(similarity[0]) - 1)
-            s_part = torch.zeros(now_num_pasta)
-            for idx in range(now_num_pasta):
-                if idx == 0:
-                    s_part[now_num_pasta - 1] = (similarity[0][0] + similarity[0][now_num_pasta]) / 2
-                else:
-                    s_part[idx - 1] = similarity[0][idx]
-            s_part = s_part - torch.mean(s_part)
+            s_part = similarity - torch.mean(similarity)
             p_part = torch.sigmoid(s_part)
 
             f_parts.append(image_features_i)
             s_parts.append(s_part)
             p_parts.append(p_part)
             '''
-
+            
             # Only Image Feature
             x = image_features
             for i in range(len(self.clip2pasta[class_id])):
@@ -218,9 +218,13 @@ class clip_a2v(nn.Module):
 
             s_parts.append(s_part)
             p_parts.append(p_part)
-        
+            
         f_pasta = torch.cat(f_parts, 1)
         p_pasta = torch.cat(p_parts, 1)
+
+        # f_pasta_language = torch.matmul(p_pasta, self.pasta_language_matrix)
+
+        # f_pasta = torch.cat([f_pasta_visual, f_pasta_language], 1)  # Note: need to modify the input dim of the mlp 
 		
         s_verb = self.verb_cls_scores(f_pasta)
         p_verb = torch.sigmoid(s_verb)
