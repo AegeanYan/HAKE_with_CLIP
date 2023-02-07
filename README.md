@@ -12,6 +12,8 @@ This repo contains code for the ICIPMC 2023 paper:
 
 A simple but efficient way to improve a general human activity feature extractor and human PaSta (part states) detector based on HAKE data.
 
+We employ a new framework called CLIP to replace the CNNs extracting features layers before Activity2Vev in order to extract information from the picture more efficiently. We also propose several PaSta-based activity reasoning methods. The whole framework is known as CPaStaNet. Promoted by it, our method achieves significant advancements, e.g., 17.9 and 24.4 mAP in image-level human activity and part state classification tasks on the HAKE-Image dataset. 
+
 ------
 
 #### Pre-requisities
