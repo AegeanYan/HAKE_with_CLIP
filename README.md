@@ -16,6 +16,12 @@ We employ a new framework called CLIP to replace the CNNs extracting features la
 
 ------
 
+#### Our model
+
+![](https://raw.githubusercontent.com/AegeanYan/ImageBed/main/%E6%88%AA%E5%B1%8F2023-02-08%20.png)
+
+------
+
 #### Pre-requisities
 
 We used python==3.7.2 and you can find more information in requirement.txt
